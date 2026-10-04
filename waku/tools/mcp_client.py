@@ -122,10 +122,13 @@ class MCPBridge:
 
     def start(self) -> list[Tool]:
         """Connect every configured server and return their tools (as Tools)."""
-        self._thread.start()
         servers = json.loads(self.config_path.read_text(encoding="utf-8")).get("servers", [])
+        # Deadline discovery imports the OAuth SDK. Finish those imports before
+        # the connection task imports the same SDK on another thread.
+        deadline = self._deadline(servers)
+        self._thread.start()
         fut = asyncio.run_coroutine_threadsafe(self._connect_all(servers), self._loop)
-        listed = fut.result(self._deadline(servers))  # {server: [tool metas]}
+        listed = fut.result(deadline)  # {server: [tool metas]}
         tools: list[Tool] = []
         for srv, metas in listed.items():
             for meta in metas:

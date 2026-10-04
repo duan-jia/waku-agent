@@ -6,6 +6,8 @@ move, and the condition that retires it. The file holds 40 entries at most,
 and anyone deletes an entry that no longer holds, in the PR that makes it
 false. A gotcha that can become a test should become one.
 
+- **[2026-10-04] Concurrent MCP SDK imports can look like a missing connector** — deadline discovery imports OAuth while the connection thread imports MCP; SDK 2.2.0 can then report a partially initialized module. Resolve the deadline before starting the thread; `test_mcp_startup.py` guards this order. _Retire when: the SDK supports concurrent initialization._
+
 - **[2026-09-13] The Google sign-in page says the flow completed before Waku has a token** — the browser page appears when Google hands back the one-time code, and Waku exchanges the code afterwards. An `InvalidClientError` after that page means Google rejected the client secret in `.waku/credentials.json`: download the OAuth client's JSON again. _Retire when: `waku connect google` reports a rejected secret in plain words._
 - **[2026-09-13] `parseFloat` on a CSS custom property that holds `calc()` returns 0** — `--main-min` is a `calc()` expression, so reading it as a number silently breaks the dock's width limit. Resolve it by layout with a probe element, as `dockMax` in `js/main.js` does. _Retire when: `--main-min` holds a plain length._
 - **[2026-09-13] Changing only the URL hash does not reload the dashboard's CSS or JS** — switching views with `#view` keeps the old stylesheets, so a CSS edit looks like it failed. Hard-reload, or change the query string. _Retire when: the dashboard serves assets with a content hash._
