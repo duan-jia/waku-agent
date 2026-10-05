@@ -79,3 +79,55 @@ Confirm that unauthenticated requests to the homepage and `/api/data` return
 second account's credentials cannot reach the first account's hostname.
 Restart a tenant and confirm that its saved conversation is still available.
 Use `docker compose ps` and `docker compose logs` to diagnose startup errors.
+
+## Develop the laboratory fork
+
+The fork keeps `main` aligned with `upstream/main`. The long-lived `lab` branch
+holds laboratory changes, including this static deployment. Feature branches
+start from `lab`, and their pull requests target `lab`. Keep the GitHub default
+branch as `main`, but select `lab` explicitly as the base of laboratory PRs.
+
+Start a feature from the latest laboratory version:
+
+```bash
+git fetch origin
+git switch lab
+git pull --ff-only origin lab
+git switch -c feature/knowledge-access
+```
+
+Commit the feature, push its branch, and open a PR with base `lab`:
+
+```bash
+git push -u origin feature/knowledge-access
+```
+
+GitHub runs the validate and hosted-docker workflows on PRs, including PRs
+targeting `lab`. Review the changes and checks before merging. The hosted Docker
+checks require a Docker daemon and XFS; the deterministic suite runs offline.
+
+Use GitHub's Sync fork on `main` when the original repository changes. Bring
+those updates into `lab` through a separate PR:
+
+```bash
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git switch lab
+git pull --ff-only origin lab
+git switch -c sync/lab-upstream-YYYYMMDD
+git merge origin/main
+```
+
+If Git reports conflicts, combine the intended behavior, remove conflict
+markers, stage the resolved files and commit the merge. Run the relevant
+deterministic evals and lint, push the sync branch, then open its PR against
+`lab`. Preserve the shared `lab` history with merges rather than rebasing it.
+
+Production releases select a tested commit from `lab`. Pushing or merging a
+branch does not upgrade the running laboratory server. Waku does not yet have
+the isolated staging and manual release Actions configured for fast-llm.
+The `lab-deployment-2026-10-04` tag records the earlier production source
+baseline; `deploy/lab-baseline`, `deploy/lab-pr` and the earlier upstream sync
+branch remain available as historical references. New work belongs on feature
+branches from `lab`.
